@@ -5,10 +5,15 @@ const bodyParser = require('body-parser');
 const app = express();
 const cors = require('cors');
 app.use(cors());
-const port = 3000;
+
+//dotenv config
+require('dotenv').config();
+const port = process.env.PORT || 3000;
+const databaseUrl = process.env.DATABASE_URL;
+
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://dragonfist630:Password%40123@cluster0.rly5r.mongodb.net/ballot?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(databaseUrl, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
   .catch((error) => console.log('Failed to connect to MongoDB', error));
 
