@@ -2,19 +2,22 @@
 const mongoose = require('mongoose');
 
 const organizationSchema = new mongoose.Schema({
-  name: {
+  member: {
     type: String
   },
-  surname: {
+  name: {
     type: String
   },
   organization: [],
   role: [],
-  image: {
+  img: {
     type: String
   },
-  url:{
+  link:{
     type: String
+  },
+  size :{
+    type:Number
   }
 });
 

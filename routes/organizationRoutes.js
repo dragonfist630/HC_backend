@@ -17,5 +17,6 @@ const upload = multer({ storage: storage }).single("image");
 router.post('/postMessage', upload, organizationController.createOrganization);
 // router.post("/basic", organizationController.basic);
 router.get('/data',organizationController.idealJSON);
+router.get('/imageData',organizationController.images);
 
 module.exports = router;

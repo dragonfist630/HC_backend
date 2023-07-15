@@ -1,6 +1,10 @@
 // controllers/organizationController.js
+//importing models
 const Organization = require("../models/Organization");
 const listOfOrg = require("../models/listOfOrg");
+const images = require("../models/images");
+//importing libraries
+const fs = require("fs");
 
 // Controller function for creating a new organization
 exports.createOrganization = async (req, res) => {
@@ -9,7 +13,8 @@ exports.createOrganization = async (req, res) => {
     const { name, surname, organization, organization2, organization3, organization4, organization5, role, role2, role3, role4, role5, url } =
       req.body;
     const image = req.file.filename;
-
+    const imageName = {name: req.file.filename, image: fs.readFileSync(req.file.path)};
+    // console.log(imageName);
     const final_org = [organization, organization2, organization3, organization4, organization5].filter((curr) => curr !== undefined);
     const final_role = [role, role2, role3, role4, role5].filter((curr) => curr !== undefined);
 
@@ -17,26 +22,28 @@ exports.createOrganization = async (req, res) => {
       return res.status(400).json({ message: "Fill all the fields" });
     }
 
-    console.log("array of organisation entered", final_org);
+    // console.log("array of organisation entered", final_org);
 
     const orgData = {
-      name,
-      surname,
+      member: `${name} ${surname}`,
+      name : `${name.split('')[0]}${surname.split('')[0]}`,
       organization: final_org,
       role: final_role,
-      image,
-      url,
+      img: '../img/male_user.png',
+      link: url,
+      size: 50000,
     };
 
     console.log("Object that will go to DB", orgData);
 
     // Create a new organization document
     const organizationObj = new Organization(orgData);
+    const imgaeNameObj = new images(imageName);
 
     for (const now of final_org) {
       const temp = await listOfOrg.findOne({ name: now });
       if (temp === null) {
-        const OrgObj = new listOfOrg({ name: now });
+        const OrgObj = new listOfOrg({ name: now, img: "" });
         await OrgObj.save();
       } else {
         console.log(`This Organisation already exists: ${now}`);
@@ -45,62 +52,9 @@ exports.createOrganization = async (req, res) => {
 
     // Save the organization to MongoDB
     await organizationObj.save();
-
+    // await imgaeNameObj.save();
+    fs.unlinkSync(req.file.path);
     res.status(201).json({ message: "Organization created successfully" });
-
-    // ------------------------------------------------------
-    // console.log(req.body,req.form);
-    // console.log("reuqest body", req.body);
-    // const { name, surname, organization, organization2, organization3, organization4, organization5, role, role2, role3, role4, role5, url } =
-    //   req.body;
-    // const image = req.file.filename;
-    // // console.log(req.file.filename);
-    // // console.log("request file",req.file)
-    // const final_org = [];
-    // const final_role = [];
-    // [organization, organization2, organization3, organization4, organization5].map((curr, i) => {
-    //   if (curr != null) {
-    //     final_org.push(curr);
-    //   }
-    // });
-    // [role, role2, role3, role4, role5].map((curr) => {
-    //   if (curr != null) {
-    //     final_role.push(curr);
-    //   }
-    // });
-    // if (name === "" || surname === "" || final_org === [] || final_role === [] || url === "") {
-    //   res.status(400).json({ message: "Fill all the fields" });
-    // }
-    // console.log("array of organisation entered", final_org);
-    // const orgData = {
-    //   name,
-    //   surname,
-    //   organization: final_org,
-    //   role: final_role,
-    //   image,
-    //   url,
-    // };
-    // console.log("Object that will got to DB", orgData);
-    // var Org = null;
-    // // console.log(JSON.stringify(orgData))
-
-    // // Create a new organization document
-    // const organizationObj = new Organization(orgData);
-    // final_org.map(async (now, i) => {
-    //   // console.log(`this is the ${i}`,now);
-    //   const temp = await listOfOrg.findOne({ name: now });
-    //   if (temp === null) {
-    //     Org = { name: now };
-    //     const OrgObj = new listOfOrg(Org);
-    //     await OrgObj.save();
-    //   } else {
-    //     console.log(`This Organisation already exists : ${now}`);
-    //   }
-    // });
-    // // Save the organization to MongoDB
-    // await organizationObj.save();
-
-    // res.status(201).json({ message: "Organization created successfully" });
   } catch (error) {
     // console.error(error?.message)
     res.status(500).send(error);
@@ -130,11 +84,12 @@ exports.idealJSON = async (req, res) => {
 
       const temparray = [];
       for (const curr of matchingOrganizations) {
-        const org = { name: curr.name + " " + curr.surname, img: curr.image, url: curr.url };
+        const org = { member: curr.member.split(' ')[0] + " " + curr.member.split(' ')[1],
+        name: `${curr.member.split(' ')[0].split("")[0]}${curr.member.split(' ')[1].split("")[0]}`, link: curr.link, img: curr.img, size: curr.size};
         temparray.push(org);
       }
 
-      const eachOrg = { name: d.name, img: "", children: [...temparray] };
+      const eachOrg = { name: d.name, img: d.img, children: [...temparray] };
       listOfAll.push(eachOrg);
       console.log("this is from the loop", listOfAll[0]);
     }
@@ -145,4 +100,15 @@ exports.idealJSON = async (req, res) => {
   } catch (e) {
     res.status(400).json(e);
   }
+};
+
+exports.images = async (req,res) => {
+  try{
+    const imageData = await images.find();
+    const array = [];
+    for(const t of imageData){
+      array.push({name:t.name,image: t.image});
+    }
+    res.status(200).json(array);
+  }catch(e){res.status(400).json({message:e})}
 };
