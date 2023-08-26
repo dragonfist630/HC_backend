@@ -9,7 +9,7 @@ const fs = require("fs");
 // Controller function for creating a new organization
 exports.createOrganization = async (req, res) => {
   try {
-    console.log("reuqest body", req.body);
+    // console.log("reuqest body", req.body);
     const { name, surname, organization, organization2, organization3, organization4, organization5, role, role2, role3, role4, role5, url } =
       req.body;
     const image = req.file.filename;
@@ -34,7 +34,7 @@ exports.createOrganization = async (req, res) => {
       size: 50000,
     };
 
-    console.log("Object that will go to DB", orgData);
+    // console.log("Object that will go to DB", orgData);
 
     // Create a new organization document
     const organizationObj = new Organization(orgData);
@@ -52,7 +52,7 @@ exports.createOrganization = async (req, res) => {
 
     // Save the organization to MongoDB
     await organizationObj.save();
-    // await imgaeNameObj.save();
+    await imgaeNameObj.save();
     fs.unlinkSync(req.file.path);
     res.status(201).json({ message: "Organization created successfully" });
   } catch (error) {
@@ -65,7 +65,7 @@ exports.createOrganization = async (req, res) => {
 exports.basic = async (req, res) => {
   try {
     const { self } = req.body;
-    console.log(self);
+    // console.log(self);
     res.status(201).json({ message: "done!!!" });
   } catch (error) {
     res.status(400).json({ error: "Failed to create basic" });
@@ -75,7 +75,7 @@ exports.basic = async (req, res) => {
 exports.idealJSON = async (req, res) => {
   try {
     const data = await listOfOrg.find();
-    console.log(data[0].name);
+    // console.log(data[0].name);
     const listOfAll = [];
 
     for (const d of data) {
@@ -85,30 +85,49 @@ exports.idealJSON = async (req, res) => {
       const temparray = [];
       for (const curr of matchingOrganizations) {
         const org = { member: curr.member.split(' ')[0] + " " + curr.member.split(' ')[1],
-        name: `${curr.member.split(' ')[0].split("")[0]}${curr.member.split(' ')[1].split("")[0]}`, link: curr.link, img: curr.img, size: curr.size};
+        name: curr.name, link: curr.link, img: curr.img, size: curr.size};
         temparray.push(org);
       }
-
+      // `${curr.member.split(' ')[0].split("")[0]}${curr.member.split(' ')[1].split("")[0]}`
       const eachOrg = { name: d.name, img: d.img, children: [...temparray] };
       listOfAll.push(eachOrg);
-      console.log("this is from the loop", listOfAll[0]);
+      // console.log("this is from the loop", listOfAll[0]);
     }
 
     const idealData = { name: "UoB", children: [...listOfAll] };
-    console.log("this outside the loop", listOfAll[1]);
+    // console.log("this outside the loop", listOfAll[1]);
     res.status(200).json(idealData);
   } catch (e) {
     res.status(400).json(e);
   }
 };
+// attemt to create logic for handling image
+// exports.images = async (req,res) => {
+//   try{
+//     const imageData = await images.find();
+//     const array = [];
+//     for(const t of imageData){
+//       array.push({name:t.name,image: t.image});
+//     }
+//     res.status(200).json(array);
+//   }catch(e){res.status(400).json({message:e})}
+// };
 
-exports.images = async (req,res) => {
+exports.showAdmin = async (req,res) => {
   try{
-    const imageData = await images.find();
-    const array = [];
-    for(const t of imageData){
-      array.push({name:t.name,image: t.image});
+    const data = await Organization.find();
+    console.log(data);
+    res.status(200).json(data);
+  }catch(e){res.status(400).json(e)}
+};
+//to delete created Entries of Participants
+exports.deleteEntries = async (req,res) =>{
+  const data = req.body.id;
+  try{
+    const del = await Organization.findByIdAndDelete(data);
+    if(!del){
+      return res.status(404).json({message:"_id not found"})
     }
-    res.status(200).json(array);
-  }catch(e){res.status(400).json({message:e})}
+    return res.status(200).json({message:"Item deleted Successfully"});
+  }catch(e){res.status(500).json(e)}
 };
