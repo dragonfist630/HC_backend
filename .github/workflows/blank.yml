@@ -1,0 +1,31 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - main # or your default branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Install Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14' # or your desired version
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Test build (optional)
+      run: npm test # if you have any tests
+
+    - name: Deploy to Heroku
+      if: github.ref == 'refs/heads/main' # or your default branch name
+      run: git push https://heroku:${{secrets.HEROKU_API_KEY}}@git.heroku.com/your-app-name.git HEAD:main
+      env:
+        HEROKU_API_KEY: ${{secrets.HEROKU_API_KEY}}
